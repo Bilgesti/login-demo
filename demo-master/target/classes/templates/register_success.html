@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Registration Successful</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        .success-message {
+            color: #28a745;
+            margin-top: 10px;
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        a {
+            color: #007bff;
+            text-decoration: none;
+            margin-top: 20px;
+            display: inline-block;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+<h1>Registration Successful</h1>
+<p>Your registration was successful. You have been registered with the following credentials:</p>
+<p>
+    <span>Email:</span>
+    <span th:text="${user.email}"></span>
+</p>
+<p>
+    <span>Password:</span>
+    <span th:text="${user.password}"></span>
+</p>
+
+<button onclick="location.href='/admin'">Go to Admin Page</button>
+
+<div>
+    <a href="/logout" th:href="@{/logout}">Logout</a>
+</div>
+</body>
+</html>
