@@ -39,10 +39,16 @@ public class RegisterController {
     }
 
     @PostMapping("/register")
-    public String registerUser(@Valid @ModelAttribute("user") UserDTO userDTO, BindingResult bindingResult) {
+    public String registerUser(@Valid @ModelAttribute("user") UserDTO userDTO, BindingResult bindingResult, Model model) {
         if (bindingResult.hasErrors()) {
             return "register_form";
         } else {
+
+            if (userRepository.existsByEmail(userDTO.getEmail())) {
+                model.addAttribute("emailError", "Email is already registered");
+                return "register_form";
+            }
+
             User user = new User();
             user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
             user.setEmail(userDTO.getEmail());
@@ -76,7 +82,7 @@ public class RegisterController {
     }
 
     @PostMapping("/users/delete/{userId}")
-    public String deleteUser(@PathVariable("userId") Long userId) {
+    public String deleteUser(@PathVariable("userId") Long userId, HttpServletRequest request) {
         userRepository.deleteById(userId);
         return "redirect:/admin/delete-success";
     }

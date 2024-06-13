@@ -1,22 +1,21 @@
 package com.example.login.model;
 
-import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
-
+import org.springframework.web.util.HtmlUtils;
 
 import java.io.Serializable;
-import java.util.Collection;
 
+public class UserDTO implements Serializable {
 
-public class UserDTO implements Serializable
-{
     private String name;
-    @NotEmpty(message = "Email is req")
-    @Email(message = "")
+
+    @NotEmpty(message = "Email is required")
+    @Email(message = "Please provide a valid email address")
     private String email;
-    @NotBlank(message = "password")
+
+    @NotBlank(message = "Password is required")
     private String password;
 
     public String getName() {
@@ -32,7 +31,7 @@ public class UserDTO implements Serializable
     }
 
     public void setEmail(String email) {
-        this.email = email;
+        this.email = HtmlUtils.htmlEscape(email); // Escape HTML characters in email
     }
 
     public String getPassword() {
@@ -41,6 +40,13 @@ public class UserDTO implements Serializable
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    // Custom validation method for email format
+    public boolean isEmailValid() {
+        // Regular expression for a simple email format check
+        String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
+        return email.matches(emailRegex);
     }
 
     @Override
