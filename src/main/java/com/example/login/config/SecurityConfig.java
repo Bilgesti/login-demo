@@ -1,12 +1,12 @@
 package com.example.login.config;
 
-import com.example.login.model.User;
 import com.example.login.repository.UserRepository;
 import com.example.login.service.MyUserDetailsService;
-import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -19,26 +19,35 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    @Autowired
+    private UserRepository userRepository;
+
     @Bean
-    public AuthenticationManager authManager(HttpSecurity http, UserDetailsService userDetailsService, PasswordEncoder passwordEncoder) throws Exception {
-        return http.getSharedObject(AuthenticationManagerBuilder.class)
-                .userDetailsService(userDetailsService)
-                .passwordEncoder(passwordEncoder)
-                .and()
+    public DaoAuthenticationProvider daoAuthenticationProvider(UserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(userDetailsService);
+        provider.setPasswordEncoder(passwordEncoder);
+        return provider;
+    }
+
+    @Bean
+    public AuthenticationManager authManager(HttpSecurity httpSecurity, DaoAuthenticationProvider daoAuthenticationProvider) throws Exception {
+        return httpSecurity.getSharedObject(AuthenticationManagerBuilder.class)
+                .authenticationProvider(daoAuthenticationProvider)
                 .build();
     }
 
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http    .csrf(csrf -> csrf.disable()) // för testning
-                /*.csrf(csrf -> csrf.ignoringRequestMatchers("/register", "/delete"))*/
+        http
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/register", "/delete"))
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers("/login", "/logout","/h2-console/**").permitAll()
+                                .requestMatchers("/login", "/logout").permitAll()
+                                .requestMatchers("/register").hasRole("ADMIN")
                                 .requestMatchers("/homepage").permitAll()
                                 .requestMatchers("/admin/**").hasRole("ADMIN")
-                                .requestMatchers("/users", "/delete", "/register").hasRole("ADMIN")
+                                .requestMatchers("/users", "/delete").hasRole("ADMIN")
                                 .anyRequest().authenticated()
                 )
                 .formLogin(formLogin ->
@@ -48,18 +57,22 @@ public class SecurityConfig {
                                 .failureUrl("/login?error=true")
                                 .permitAll()
                 )
+                .oauth2Login(oauth2Login ->
+                        oauth2Login
+                                .loginPage("/login")
+                                .defaultSuccessUrl("/login", true)
+                                .failureUrl("/login?error=true")
+                )
                 .logout(logout -> logout
                         .logoutUrl("/perform_logout")
-                        .logoutSuccessUrl( "/login" )
-                        .permitAll(true))
-                        .headers(headers -> headers.frameOptions().disable());
+                        .logoutSuccessUrl("/login")
+                        .permitAll());
 
         return http.build();
     }
 
-
     @Bean
-    public PasswordEncoder passwordEncoder(){
+    public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
@@ -67,6 +80,4 @@ public class SecurityConfig {
     public UserDetailsService userDetailsService(UserRepository userRepository) {
         return new MyUserDetailsService(userRepository);
     }
-
-
 }
